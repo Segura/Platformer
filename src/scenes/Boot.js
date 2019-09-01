@@ -1,35 +1,19 @@
 import Phaser from 'phaser'
-import WebFont from 'webfontloader'
 
 export default class extends Phaser.Scene {
-  constructor () {
-    super({ key: 'BootScene' })
-  }
 
-  preload () {
-    this.fontsReady = false
-    this.fontsLoaded = this.fontsLoaded.bind(this)
-    this.add.text(100, 100, 'loading fonts...')
-
-    this.load.image('background', './assets/images/sky.png')
-    this.load.image('tiles', './assets/images/tileset.png')
-    this.load.tilemapTiledJSON('map', './assets/map.json')
-
-    WebFont.load({
-      google: {
-        families: ['Bangers']
-      },
-      active: this.fontsLoaded
-    })
-  }
-
-  update () {
-    if (this.fontsReady) {
-      this.scene.start('GameScene')
+    constructor() {
+        super({key: 'BootScene'})
     }
-  }
 
-  fontsLoaded () {
-    this.fontsReady = true
-  }
+    preload() {
+        this.load.image('background', './assets/images/sky.png')
+        this.load.image('tiles', './assets/images/tileset.png')
+        this.load.tilemapTiledJSON('map', './assets/map.json')
+        this.load.spritesheet('character', 'assets/images/character.png', {frameWidth: 50, frameHeight: 37})
+    }
+
+    update() {
+        this.scene.start('GameScene')
+    }
 }

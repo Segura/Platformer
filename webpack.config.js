@@ -18,7 +18,8 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       CANVAS_RENDERER: JSON.stringify(true),
-      WEBGL_RENDERER: JSON.stringify(true)
+      WEBGL_RENDERER: JSON.stringify(true),
+      DEBUG: !!process.env.DEBUG
     }),
     new BrowserSyncPlugin({
       host: process.env.IP || 'localhost',
