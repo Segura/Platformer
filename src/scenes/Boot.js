@@ -7,13 +7,10 @@ export default class extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('background', './assets/images/sky.png')
-        this.load.image('tiles', './assets/images/tileset.png')
-        this.load.tilemapTiledJSON('map', './assets/map.json')
-        this.load.spritesheet('character', 'assets/images/character.png', {frameWidth: 50, frameHeight: 37})
+        this.load.bitmapFont('titleFont', './assets/fonts/ribeye-72.png', './assets/fonts/ribeye-72.xml')
     }
 
-    update() {
-        this.scene.start('GameScene')
+    create() {
+        this.scene.start('LoadingScene')
     }
 }
