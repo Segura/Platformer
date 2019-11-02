@@ -4,17 +4,17 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "phaser": "^3.19.0"
+    "phaser": "^3.20.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0",
+    "@babel/core": "^7.6.4",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
-    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-env": "^7.6.3",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.2",
     "browser-sync": "^2.18.13",
     "browser-sync-webpack-plugin": "^2.2.2",
-    "cross-env": "^5.2.0",
+    "cross-env": "^5.2.1",
     "eslint": "^5.5.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.7.0",
@@ -22,8 +22,8 @@
     "eslint-plugin-promise": "^4.0.0",
     "eslint-plugin-standard": "^4.0.0",
     "expose-loader": "^0.7.3",
-    "webpack": "^4.17.2",
-    "webpack-cli": "^3.1.0"
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
   },
   "scripts": {
     "dev": "cross-env DEBUG=true webpack",

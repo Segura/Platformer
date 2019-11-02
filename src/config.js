@@ -2,6 +2,8 @@ import Phaser from 'phaser'
 
 export default {
     type: Phaser.AUTO,
+    title: NAME,
+    version: VERSION,
     parent: 'content',
     width: 800,
     height: 600,
@@ -12,5 +14,5 @@ export default {
             debug: DEBUG
         }
     },
-    localStorageName: 'phaseres6webpack'
+    disableContextMenu: true,
 }

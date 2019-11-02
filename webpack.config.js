@@ -1,6 +1,7 @@
-var path = require('path')
-var webpack = require('webpack')
-var BrowserSyncPlugin = require('browser-sync-webpack-plugin')
+const path = require('path')
+const webpack = require('webpack')
+const BrowserSyncPlugin = require('browser-sync-webpack-plugin')
+const packageInfo = require('./package.json')
 
 module.exports = {
   entry: {
@@ -19,6 +20,8 @@ module.exports = {
     new webpack.DefinePlugin({
       CANVAS_RENDERER: JSON.stringify(true),
       WEBGL_RENDERER: JSON.stringify(true),
+      NAME: `'${packageInfo.name}'`,
+      VERSION: `'${packageInfo.version}'`,
       DEBUG: !!process.env.DEBUG
     }),
     new BrowserSyncPlugin({
