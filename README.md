@@ -8,7 +8,10 @@
 
 ## TODO
 
+1. After "end" level
 1. Parallax background
 1. Spawn effect
 1. Landing effect
 1. Gamepad support
+1. Cliff hang
+1. "Stuck" bag

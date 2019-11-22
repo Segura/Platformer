@@ -1,17 +1,17 @@
 import Phaser from 'phaser'
 import {Character} from "./Character"
 
-export default class extends Phaser.Scene {
+export class GameScene extends Phaser.Scene {
+
+    static DEFAULT_MAP_OFFSET = 450
 
     constructor() {
-        super({key: 'GameScene'})
+        super({ key: 'GameScene' })
     }
 
-    init() {
-    }
+    init() {}
 
-    preload() {
-    }
+    preload() {}
 
     create() {
         let image = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'background')
@@ -21,10 +21,10 @@ export default class extends Phaser.Scene {
         image.setScale(scale).setScrollFactor(0)
 
         const map = this.make.tilemap({key: 'map'})
-        const tileset = map.addTilesetImage('tileset', 'tiles')
-        const platforms = map.createStaticLayer('main', tileset)
-        const bridges = map.createStaticLayer('bridges', tileset)
-        const behind = map.createStaticLayer('behind', tileset)
+        const tileSet = map.addTilesetImage('tileset', 'tiles')
+        const platforms = map.createStaticLayer('main', tileSet)
+        const bridges = map.createStaticLayer('bridges', tileSet)
+        const behind = map.createStaticLayer('behind', tileSet)
         platforms.setCollisionByProperty({ collided: true })
         bridges.setCollisionByProperty({ collided: true })
 
@@ -51,20 +51,23 @@ export default class extends Phaser.Scene {
             asset: 'character'
         })
 
+        this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels - GameScene.DEFAULT_MAP_OFFSET)
         this.cameras.main.startFollow(this.player)
+        this.cameras.main.setLerp(0.3, 0.3)
+        this.cameras.main.setDeadzone(50, 50)
 
+        this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels, true, true, true, true)
         this.physics.add.collider(this.player, platforms)
         this.physics.add.collider(this.player, bridges)
 
-        this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels, true, true, true, true)
-        this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
-
         this.cursors = this.input.keyboard.createCursorKeys()
-
-        this.cursors = this.input.keyboard.createCursorKeys();
+        this.resetKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+        // this.cameras.main.setRotation(Phaser.Math.DegToRad(90))
+        // this.physics.world.gravity.set(6000, 0)
+        // this.add.tween(this.cameras.main.setRotation).to({x:2,y:2}, 500, Phaser.Easing.Elastic.Out, true, 100)
     }
 
-    update () {
-        this.player.update()
+    update(time, delta) {
+        this.player.update(delta / 1000)
     }
 }

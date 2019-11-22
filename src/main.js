@@ -1,8 +1,6 @@
 import Phaser from 'phaser'
 
-import BootScene from './scenes/Boot'
-import LoadingScene from './scenes/Loading'
-import GameScene from './scenes/Game'
+import {BootScene, GameScene, LoadingScene} from './scenes'
 
 import config from './config'
 

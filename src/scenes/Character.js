@@ -2,8 +2,11 @@ import Phaser from 'phaser'
 
 export class Character extends Phaser.Physics.Arcade.Sprite {
 
-    JUMP_SPEED = 330
-    RUN_SPEED = 180
+    static JUMP_SPEED = 330
+    static RUN_SPEED = 150
+
+    static ACCELERATION = 400
+    static AIR_DECELERATION = 150
 
     constructor ({ scene, spawnPoint, asset }) {
         super(scene, spawnPoint.x, spawnPoint.y, asset)
@@ -11,7 +14,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this)
         scene.physics.add.existing(this)
         this.setSize(20, 30)
-        this.setMaxVelocity(Math.sqrt(this.JUMP_SPEED ** 2 + this.RUN_SPEED ** 2))
+        this.setMaxVelocity(Character.RUN_SPEED, Character.JUMP_SPEED)
 
         this.reset()
 
@@ -54,29 +57,49 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     }
 
     update (delta) {
-        if (!Phaser.Geom.Rectangle.Overlaps(this.scene.physics.world.bounds, this.getBounds())) {
+        if (!Phaser.Geom.Rectangle.Overlaps(this.scene.physics.world.bounds, this.getBounds()) || this.scene.resetKey.isDown) {
             return this.reset()
         }
 
         this.isJump = !this.body.blocked.down
-        this.isCrouch = this.scene.cursors.down.isDown && !this.isJump
+        this.onGround = this.body.blocked.down
+        this.isCrouch = this.scene.cursors.down.isDown && this.onGround
+        this.isStand = !this.isJump && !this.isCrouch
+
         if (this.scene.cursors.up.isDown && !this.isJump && this.canJump) {
-            this.setVelocityY(-this.JUMP_SPEED)
+            this.setVelocityY(-Character.JUMP_SPEED)
             this.canJump = false
         }
         if (!this.isJump && this.scene.cursors.up.isUp) {
             this.canJump = true
         }
 
-        if (!this.isCrouch) {
-            if (this.scene.cursors.left.isDown) {
-                this.flipX = true
-                this.setVelocityX(-this.RUN_SPEED)
+        if (this.isStand) {
+            if (this.isMovingForward !== this.body.velocity.x > 0) {
+                this.setVelocityX(0)
             }
-            else if (this.scene.cursors.right.isDown) {
-                this.flipX = false
-                this.setVelocityX(this.RUN_SPEED)
-            } else if(!this.isJump) {
+            if (this.scene.cursors.left.isDown) {
+                this.isMovingForward = false
+                this.setAccelerationX(-Character.ACCELERATION)
+            } else if (this.scene.cursors.right.isDown) {
+                this.isMovingForward = true
+                this.setAccelerationX(Character.ACCELERATION)
+            } else {
+                this.setAccelerationX(0)
+                this.setVelocityX(0)
+            }
+        } else if (this.isJump) {
+            this.setAccelerationX(0)
+            if (this.scene.cursors.left.isDown && this.isMovingForward) {
+                this.setVelocityX(Math.max(0, this.body.velocity.x - Character.AIR_DECELERATION * delta))
+            } else if (this.scene.cursors.right.isDown && !this.isMovingForward) {
+                this.setVelocityX(Math.min(0, this.body.velocity.x + Character.AIR_DECELERATION * delta))
+            }
+            if (this.scene.cursors.up.isUp) {
+                this.setVelocityY(this.body.velocity.y + Character.AIR_DECELERATION * delta)
+            }
+            if (this.body.blocked.left || this.body.blocked.right) {
+                this.setAccelerationX(0)
                 this.setVelocityX(0)
             }
         }
@@ -85,10 +108,11 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     }
 
     setAnimation() {
+        this.flipX = !this.isMovingForward
         if (this.isCrouch) {
             this.anims.play(this.crouchAnimation, true)
         } else if (this.isJump) {
-            if (Math.abs(this.body.velocity.y) < this.JUMP_SPEED / 3) {
+            if (Math.abs(this.body.velocity.y) < Character.JUMP_SPEED / 3) {
                 this.anims.play(this.jumpTopAnimation, true)
             } else if (this.body.velocity.y < 0) {
                 this.anims.play(this.jumpUpAnimation, true)
@@ -106,7 +130,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         this.setPosition(this.spawnPoint.x, this.spawnPoint.y)
         this.setVelocityX(0)
         this.setVelocityY(0)
-        this.flipX = false
+        this.isMovingForward = true
         this.canJump = true
     }
 }

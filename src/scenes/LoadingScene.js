@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 
-export default class extends Phaser.Scene {
+export class LoadingScene extends Phaser.Scene {
 
     text
     dotsCount = 0
