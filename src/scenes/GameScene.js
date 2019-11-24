@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import {Character} from "./Character"
+import {Character} from "../character"
 
 export class GameScene extends Phaser.Scene {
 
@@ -21,24 +21,27 @@ export class GameScene extends Phaser.Scene {
         image.setScale(scale).setScrollFactor(0)
 
         const map = this.make.tilemap({key: 'map'})
+
         const tileSet = map.addTilesetImage('tileset', 'tiles')
-        const platforms = map.createStaticLayer('main', tileSet)
-        const bridges = map.createStaticLayer('bridges', tileSet)
-        const behind = map.createStaticLayer('behind', tileSet)
-        platforms.setCollisionByProperty({ collided: true })
-        bridges.setCollisionByProperty({ collided: true })
+        this.platforms = map.createStaticLayer('main', tileSet)
+        this.bridges = map.createStaticLayer('bridges', tileSet)
+        this.behind = map.createStaticLayer('behind', tileSet)
+        this.platforms.setCollisionByProperty({ collided: true })
+        this.bridges.setCollisionByProperty({ collided: true })
 
         const playerTile = map.findByIndex(1, 0, false, 'player')
         const spawnPoint = { x: playerTile.pixelX, y: playerTile.pixelY }
 
+        this.tileSize = map.tileWidth
+
         if (DEBUG) {
             const debugGraphics = this.add.graphics().setAlpha(0.75)
-            platforms.renderDebug(debugGraphics, {
+            this.platforms.renderDebug(debugGraphics, {
                 tileColor: null,
                 collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255),
                 faceColor: new Phaser.Display.Color(40, 39, 37, 255)
             })
-            bridges.renderDebug(debugGraphics, {
+            this.bridges.renderDebug(debugGraphics, {
                 tileColor: null,
                 collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255),
                 faceColor: new Phaser.Display.Color(40, 39, 37, 255)
@@ -57,8 +60,8 @@ export class GameScene extends Phaser.Scene {
         this.cameras.main.setDeadzone(50, 50)
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels, true, true, true, true)
-        this.physics.add.collider(this.player, platforms)
-        this.physics.add.collider(this.player, bridges)
+        this.physics.add.collider(this.player, this.platforms)
+        this.physics.add.collider(this.player, this.bridges)
 
         this.cursors = this.input.keyboard.createCursorKeys()
         this.resetKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
