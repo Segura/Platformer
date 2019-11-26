@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 
 import {State, StateMachine, StateTransition} from '../state-machine'
+import {BUTTONS} from '../control'
 
 const STATE = {
     RUN_LEFT: 'RUN_LEFT',
@@ -97,6 +98,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
                 [
                     new StateTransition(this.isFailing, STATE.JUMP_DOWN),
                     new StateTransition(this.isKeyDown, STATE.CROUCH),
+                    // TODO: remove repeated jumps
                     new StateTransition(this.isKeyUp, STATE.JUMP_UP, this.onJump),
                     new StateTransition([this.isKeyLeft, this.canMoveLeft], STATE.RUN_LEFT, this.onRunLeft),
                     new StateTransition([this.isKeyRight, this.canMoveRight], STATE.RUN_RIGHT, this.onRunRight),
@@ -166,7 +168,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
                     new StateTransition(this.isKeyUp, STATE.JUMP_UP, this.onJump),
                     new StateTransition(this.isFailing, STATE.JUMP_DOWN),
                     new StateTransition(this.isStop, STATE.STAND),
-                    // new StateTransition(???, STATE.CROUCH),
+                    // TODO: new StateTransition(???, STATE.CROUCH),
                 ],
                 this.ifGlide
             ),
@@ -183,13 +185,14 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
 
     isStop = () => this.body.velocity.x === 0
     isOnGround = () => this.body.onFloor()
-    isKeyDown = () => this.scene.cursors.down.isDown
-    isKeyDownUp = () => this.scene.cursors.down.isUp
-    isKeyLeft = () => this.scene.cursors.left.isDown
-    isKeyLeftUp = () => this.scene.cursors.left.isUp
-    isKeyRight = () => this.scene.cursors.right.isDown
-    isKeyRightUp = () => this.scene.cursors.right.isUp
-    isKeyUp = () => this.scene.cursors.up.isDown
+    isKeyDown = () => this.scene.controls.isDown(BUTTONS.DOWN)
+    isKeyDownUp = () => this.scene.controls.isUp(BUTTONS.DOWN)
+    isKeyLeft = () => this.scene.controls.isDown(BUTTONS.LEFT)
+    isKeyLeftUp = () => this.scene.controls.isUp(BUTTONS.LEFT)
+    isKeyRight = () => this.scene.controls.isDown(BUTTONS.RIGHT)
+    isKeyRightUp = () => this.scene.controls.isUp(BUTTONS.RIGHT)
+    isKeyUp = () => this.scene.controls.isDown(BUTTONS.UP)
+    isKeyUpUp = () => this.scene.controls.isUp(BUTTONS.UP)
     isFailing = () => this.body.velocity.y > 0
     isOnTop = () => Math.abs(this.body.velocity.y) < Character.JUMP_SPEED / 3
     isCanJump = () => this.canJump
@@ -255,7 +258,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     }
 
     ifStand = () => {
-        if (this.scene.cursors.up.isUp) {
+        if (this.isKeyUpUp()) {
             this.canJump = true
         }
         this.setAccelerationX(0)
@@ -271,13 +274,13 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     }
 
     ifInAir = (delta) => {
-        if (this.scene.cursors.left.isDown && this.isMovingForward || this.scene.cursors.right.isDown && !this.isMovingForward) {
+        if (this.isKeyLeft() && this.isMovingForward || this.isKeyRight() && !this.isMovingForward) {
             this.slowDownByX(Character.AIR_DECELERATION, delta)
         }
     }
 
     update (delta) {
-        if (!Phaser.Geom.Rectangle.Overlaps(this.scene.physics.world.bounds, this.getBounds()) || this.scene.resetKey.isDown) {
+        if (!Phaser.Geom.Rectangle.Overlaps(this.scene.physics.world.bounds, this.getBounds()) || this.scene.controls.isDown(BUTTONS.RESET)) {
             return this.reset()
         }
 

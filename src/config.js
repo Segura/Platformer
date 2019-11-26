@@ -7,6 +7,9 @@ export default {
     parent: 'content',
     width: 800,
     height: 600,
+    input: {
+        gamepad: true
+    },
     physics: {
         default: 'arcade',
         arcade: {
