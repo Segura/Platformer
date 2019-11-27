@@ -13,7 +13,6 @@
 1. Spawn effect
 1. Landing effect
 1. "Stuck" bug
-1. Breathing
 1. Blocking move bug
 1. Achievements
 1. Level up and skills

@@ -26,6 +26,11 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     static AIR_DECELERATION = 150
     static SLIDE_DECELERATION = 100
 
+    static DEFAULT_STAND_ANIMATION_FRAME_RATE = 8
+    static MIN_STAND_ANIMATION_FRAME_RATE = 4
+    static SLOW_DOWN_STAND_ANIMATION_STEP = 1
+    static SLOW_DOWN_STAND_ANIMATION_EVERY_S = 2
+
     static WIDTH = 20
     static HEIGHT = 30
 
@@ -37,10 +42,10 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         this.setSize(Character.WIDTH, Character.HEIGHT)
         this.setMaxVelocity(Character.RUN_SPEED, Character.JUMP_SPEED)
 
-        this.idleAnimation = this.scene.anims.create({
+        this.scene.anims.create({
             key: STATE.STAND,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 0, end: 3 }),
-            frameRate: 4,
+            frameRate: Character.DEFAULT_STAND_ANIMATION_FRAME_RATE,
             repeat: -1
         })
         this.scene.anims.create({
@@ -109,7 +114,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
             new State(
                 STATE.CROUCH,
                 [
-                    new StateTransition(this.isKeyDownUp, STATE.STAND),
+                    new StateTransition(this.isKeyDownUp, STATE.STAND, this.onStand),
                 ]
             ),
             new State(
@@ -133,7 +138,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
                 [
                     new StateTransition([this.isOnGround, this.isKeyLeft], STATE.RUN_LEFT, this.onRunLeft),
                     new StateTransition([this.isOnGround, this.isKeyRight], STATE.RUN_RIGHT, this.onRunRight),
-                    new StateTransition(this.isOnGround, STATE.STAND),
+                    new StateTransition(this.isOnGround, STATE.STAND, this.onStand),
                     new StateTransition(this.isCanGrab, STATE.GRAB, this.onGrub),
                 ],
                 this.ifInAir
@@ -145,8 +150,8 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
                     new StateTransition(this.isFailing, STATE.JUMP_DOWN),
                     new StateTransition(this.isKeyDown, STATE.GLIDE, this.onGlide),
                     new StateTransition(this.isKeyRight, STATE.RUN_RIGHT, this.onRunRight),
-                    new StateTransition(this.isKeyLeftUp, STATE.STAND),
-                    new StateTransition(this.isStop, STATE.STAND),
+                    new StateTransition(this.isKeyLeftUp, STATE.STAND, this.onStand),
+                    new StateTransition(this.isStop, STATE.STAND, this.onStand),
                 ],
                 this.ifRun
             ),
@@ -157,8 +162,8 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
                     new StateTransition(this.isFailing, STATE.JUMP_DOWN),
                     new StateTransition(this.isKeyDown, STATE.GLIDE, this.onGlide),
                     new StateTransition(this.isKeyLeft, STATE.RUN_LEFT, this.onRunLeft),
-                    new StateTransition(this.isKeyRightUp, STATE.STAND),
-                    new StateTransition(this.isStop, STATE.STAND),
+                    new StateTransition(this.isKeyRightUp, STATE.STAND, this.onStand),
+                    new StateTransition(this.isStop, STATE.STAND, this.onStand),
                 ],
                 this.ifRun
             ),
@@ -167,7 +172,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
                 [
                     new StateTransition(this.isKeyUp, STATE.JUMP_UP, this.onJump),
                     new StateTransition(this.isFailing, STATE.JUMP_DOWN),
-                    new StateTransition(this.isStop, STATE.STAND),
+                    new StateTransition(this.isStop, STATE.STAND, this.onStand),
                     // TODO: new StateTransition(???, STATE.CROUCH),
                 ],
                 this.ifGlide
@@ -215,6 +220,16 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     canMoveLeft = () => !this.body.blocked.left
     canMoveRight = () => !this.body.blocked.right
 
+    onStand = () => {
+        if (this.isKeyUpUp()) {
+            // TODO: other states
+            this.canJump = true
+        }
+        this.standDuration = 0
+        this.setAccelerationX(0)
+        this.setVelocityX(0)
+    }
+
     onRunLeft = () => {
         this.isMovingForward = false
         if (this.body.velocity.x > 0) {
@@ -257,12 +272,11 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         this.updateAnimation(state)
     }
 
-    ifStand = () => {
-        if (this.isKeyUpUp()) {
-            this.canJump = true
-        }
-        this.setAccelerationX(0)
-        this.setVelocityX(0)
+    ifStand = (delta) => {
+        this.standDuration += delta
+        const slowDownValue = Math.floor(this.standDuration / Character.SLOW_DOWN_STAND_ANIMATION_EVERY_S)
+        const newRate = Character.DEFAULT_STAND_ANIMATION_FRAME_RATE - slowDownValue * Character.SLOW_DOWN_STAND_ANIMATION_STEP
+        this.anims.msPerFrame = 1000 / Math.max(Character.MIN_STAND_ANIMATION_FRAME_RATE, newRate)
     }
 
     ifRun = (delta) => {
