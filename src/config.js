@@ -4,6 +4,7 @@ export default {
     type: Phaser.AUTO,
     title: NAME,
     version: VERSION,
+    url: 'https://github.com/Segura/platformer',
     parent: 'content',
     width: 800,
     height: 600,
@@ -17,5 +18,5 @@ export default {
             debug: DEBUG
         }
     },
-    disableContextMenu: true,
+    disableContextMenu: true
 }

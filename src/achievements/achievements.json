@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Lazy player",
+    "description": "Do nothing for a while",
+    "icon": "idle",
+    "conditions": {
+      "IDLE": "> 30"
+    }
+  },
+  {
+    "name": "First time",
+    "description": "I hope this is the first and last time",
+    "icon": "dead",
+    "conditions": {
+      "DIE": "= 1"
+    }
+  },
+  {
+    "name": "Again and again",
+    "description": "Will you did it on purpose?",
+    "icon": "dead",
+    "conditions": {
+      "DIE": "= 10"
+    }
+  }
+]

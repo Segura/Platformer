@@ -14,17 +14,14 @@ export class StateMachine {
         this.currentState.transitions.some((transition) => {
             if (transition.checks.every((check) => check())) {
                 const newStateKey = transition.target
-                if (transition.onChange) {
-                    transition.onChange(newStateKey)
-                }
+                this.currentState.onLeave()
+                transition.onChange(newStateKey)
                 this.onChange(newStateKey)
                 this.currentState = this.states[newStateKey]
                 return true
             }
         })
-        if (this.currentState.update) {
-            this.currentState.update(delta)
-        }
+        this.currentState.update(delta)
     }
 
     reset () {

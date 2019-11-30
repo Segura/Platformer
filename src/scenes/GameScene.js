@@ -1,8 +1,9 @@
 import Phaser from 'phaser'
-import {Character} from '../character'
-import {BUTTONS, Controls} from '../control'
+import { Character } from '../character'
+import { BUTTONS, Controls } from '../control'
+import { AchievementsManager } from '../achievements'
 
-import {GENGameS3Controller} from './GENGameS3Controller'
+import { GENGameS3Controller } from './GENGameS3Controller'
 
 export class GameScene extends Phaser.Scene {
 
@@ -57,8 +58,6 @@ export class GameScene extends Phaser.Scene {
         const playerTile = map.findByIndex(1, 0, false, 'player')
         const spawnPoint = { x: playerTile.pixelX, y: playerTile.pixelY }
 
-        this.tileSize = map.tileWidth
-
         if (DEBUG) {
             const debugGraphics = this.add.graphics().setAlpha(0.75)
             this.platforms.renderDebug(debugGraphics, {
@@ -88,20 +87,20 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.platforms)
         this.physics.add.collider(this.player, this.bridges)
 
+        this.achievementsManager = new AchievementsManager(this)
+
         // this.cameras.main.setRotation(Phaser.Math.DegToRad(90))
         // this.physics.world.gravity.set(6000, 0)
         // this.add.tween(this.cameras.main.setRotation).to({x:2,y:2}, 500, Phaser.Easing.Elastic.Out, true, 100)
 
         if (DEBUG) {
-            this.debugText = this.add.text(0, 0, '', {font: '12px', fill: '#000'})
+            this.debugText = this.add.text(this.cameras.main.worldView.x + 20, this.cameras.main.worldView.y + 20, '', {font: '12px', fill: '#000'}).setScrollFactor(0)
         }
     }
 
     update(time, delta) {
         this.player.update(delta / 1000)
         if (DEBUG) {
-            this.debugText.setPosition(this.cameras.main.worldView.x + 20, this.cameras.main.worldView.y + 20)
-
             const pad = this.input.gamepad.gamepads[0]
             if (pad) {
                 this.debugText.setText([

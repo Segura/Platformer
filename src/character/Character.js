@@ -1,7 +1,8 @@
 import Phaser from 'phaser'
 
-import {State, StateMachine, StateTransition} from '../state-machine'
-import {BUTTONS} from '../control'
+import { State, StateMachine, StateTransition } from '../state-machine'
+import { BUTTONS } from '../control'
+import { CHARACTER_EVENTS } from '../events'
 
 const STATE = {
     RUN_LEFT: 'RUN_LEFT',
@@ -28,7 +29,6 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
 
     static DEFAULT_STAND_ANIMATION_FRAME_RATE = 8
     static MIN_STAND_ANIMATION_FRAME_RATE = 4
-    static SLOW_DOWN_STAND_ANIMATION_STEP = 1
     static SLOW_DOWN_STAND_ANIMATION_EVERY_S = 2
 
     static WIDTH = 20
@@ -41,6 +41,10 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this)
         this.setSize(Character.WIDTH, Character.HEIGHT)
         this.setMaxVelocity(Character.RUN_SPEED, Character.JUMP_SPEED)
+        // TODO: save/load
+        this.info = {
+            numberOfDeaths: 0
+        }
 
         this.scene.anims.create({
             key: STATE.STAND,
@@ -108,7 +112,8 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
                     new StateTransition([this.isKeyLeft, this.canMoveLeft], STATE.RUN_LEFT, this.onRunLeft),
                     new StateTransition([this.isKeyRight, this.canMoveRight], STATE.RUN_RIGHT, this.onRunRight),
                 ],
-                this.ifStand,
+                void 0,
+                this.onLeaveStand,
                 true
             ),
             new State(
@@ -228,6 +233,11 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         this.standDuration = 0
         this.setAccelerationX(0)
         this.setVelocityX(0)
+        this.idleTimer = this.scene.time.addEvent({
+            delay: 1000,
+            callback: this.onStandEverySecond,
+            loop: true
+        });
     }
 
     onRunLeft = () => {
@@ -267,19 +277,25 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         this.body.moves = true
     }
 
-    onChangeState = (state) => {
-        console.log(`Set state '${state}'`)
-        this.updateAnimation(state)
+    onDie = () => {
+        this.info.numberOfDeaths += 1
+        this.scene.events.emit(CHARACTER_EVENTS.DIE, this.info.numberOfDeaths)
+        return this.reset()
     }
 
-    ifStand = (delta) => {
-        this.standDuration += delta
-        const slowDownValue = Math.floor(this.standDuration / Character.SLOW_DOWN_STAND_ANIMATION_EVERY_S)
-        const newRate = Character.DEFAULT_STAND_ANIMATION_FRAME_RATE - slowDownValue * Character.SLOW_DOWN_STAND_ANIMATION_STEP
+    onChangeState = (newState) => {
+        console.log(`Set state '${newState}'`)
+        this.updateAnimation(newState)
+    }
+
+    onStandEverySecond = () => {
+        this.standDuration += 1
+        const newRate = Character.DEFAULT_STAND_ANIMATION_FRAME_RATE - this.standDuration / Character.SLOW_DOWN_STAND_ANIMATION_EVERY_S
         this.anims.msPerFrame = 1000 / Math.max(Character.MIN_STAND_ANIMATION_FRAME_RATE, newRate)
+        this.scene.events.emit(CHARACTER_EVENTS.IDLE, this.standDuration)
     }
 
-    ifRun = (delta) => {
+    ifRun = () => {
         this.canGrab = true
     }
 
@@ -293,20 +309,26 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
+    onLeaveStand = () => {
+        if (this.idleTimer) {
+            this.idleTimer.remove()
+        }
+    }
+
     update (delta) {
         if (!Phaser.Geom.Rectangle.Overlaps(this.scene.physics.world.bounds, this.getBounds()) || this.scene.controls.isDown(BUTTONS.RESET)) {
-            return this.reset()
+            return this.onDie()
         }
 
         this.machine.update(delta)
     }
 
-    updateAnimation(state) {
+    updateAnimation (state) {
         this.flipX = !this.isMovingForward
         this.anims.play(state, true)
     }
 
-    reset() {
+    reset () {
         this.setPosition(this.spawnPoint.x, this.spawnPoint.y)
         this.setVelocity(0, 0)
         this.setAcceleration(0, 0)
@@ -317,7 +339,7 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         this.body.moves = true
     }
 
-    slowDownByX(slowDownSpeed, delta) {
+    slowDownByX (slowDownSpeed, delta) {
         const sign = Math.sign(this.body.velocity.x)
         const absoluteValue = Math.abs(this.body.velocity.x)
         const lowedValue = absoluteValue - slowDownSpeed * delta
