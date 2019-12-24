@@ -6,22 +6,28 @@ export class StateMachine {
             this.states[state.key] = state
         })
         this.onChange = onChange
-        this.defaultState = states.find((state) => state.default)
+        this.defaultState = states.find((state) => state.isDefault)
         this.reset()
     }
 
     update (delta) {
+        this.currentState.onUpdate(delta)
+    }
+
+    handleEvent (event) {
         this.currentState.transitions.some((transition) => {
-            if (transition.checks.every((check) => check())) {
-                const newStateKey = transition.target
-                this.currentState.onLeave()
-                transition.onChange(newStateKey)
-                this.onChange(newStateKey)
-                this.currentState = this.states[newStateKey]
+            if (transition.event === event && transition.checks.every(check => check())) {
+                this.change(transition.target)
                 return true
             }
         })
-        this.currentState.update(delta)
+    }
+
+    change (state) {
+        this.currentState.onLeave()
+        this.currentState = this.states[state]
+        this.currentState.onEnter()
+        this.onChange(state)
     }
 
     reset () {

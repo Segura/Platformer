@@ -21,3 +21,4 @@
 1. Cool main menu
 1. UI
 1. Saving
+1. Items and inventory

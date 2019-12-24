@@ -1,5 +1,5 @@
-import {KeyboardProvider} from './KeyboardProvider'
-import {GamepadProvider} from './GamepadProvider'
+import { KeyboardProvider } from './KeyboardProvider'
+import { GamepadProvider } from './GamepadProvider'
 
 export class Controls {
 
@@ -12,15 +12,18 @@ export class Controls {
             this.providers.push(new KeyboardProvider(this.scene, this.config.keyboard))
         }
         if (this.config.gamepad) {
-            this.providers.push(new GamepadProvider(this.scene, this.config.gamepad))
+            // GamepadPlugin.
+            console.log(scene.input.gamepad.total)
+            scene.input.gamepad.once('connected', this.onGamepadConnect)
         }
+
+        this.subscribe()
     }
 
-    isUp (button) {
-        return this.providers.every((provider) => provider.isUp(button))
+    onGamepadConnect = () => {
+        console.log('connect')
+        this.providers.push(new GamepadProvider(this.scene, this.config.gamepad))
     }
 
-    isDown (button) {
-        return this.providers.some((provider) => provider.isDown(button))
-    }
+    subscribe = () => this.providers.forEach((provider) => provider.subscribe())
 }

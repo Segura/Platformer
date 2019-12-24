@@ -21,7 +21,8 @@ export class LoadingScene extends Phaser.Scene {
         this.load.image('idle', './assets/images/achievements/idle.png')
 
         this.load.tilemapTiledJSON('map', './assets/map.json')
-        this.load.spritesheet('character', 'assets/images/character.png', {frameWidth: 50, frameHeight: 37})
+        this.load.spritesheet('character', 'assets/images/character.png', { frameWidth: 50, frameHeight: 37 })
+        this.load.spritesheet('slime', 'assets/images/enemies/slime.png', { frameWidth: 32, frameHeight: 25 })
     }
 
     create() {

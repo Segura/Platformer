@@ -1,21 +1,11 @@
 import Phaser from 'phaser'
 
-import { State, StateMachine, StateTransition } from '../state-machine'
-import { BUTTONS } from '../control'
-import { CHARACTER_EVENTS } from '../events'
+import { StateMachine } from '../state-machine'
+import { BUTTONS_EVENTS, CHARACTER_EVENTS } from '../events'
 
-const STATE = {
-    RUN_LEFT: 'RUN_LEFT',
-    RUN_RIGHT: 'RUN_RIGHT',
-    JUMP: 'JUMP',
-    CROUCH: 'CROUCH',
-    GRAB: 'GRAB',
-    JUMP_TOP: 'JUMP_TOP',
-    STAND: 'STAND',
-    JUMP_UP: 'JUMP_UP',
-    JUMP_DOWN: 'JUMP_DOWN',
-    GLIDE: 'GLIDE'
-}
+import { stateMachineConfig } from './state-machine-config'
+
+import { STATES } from './states'
 
 export class Character extends Phaser.Physics.Arcade.Sprite {
 
@@ -34,175 +24,81 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     static WIDTH = 20
     static HEIGHT = 30
 
-    constructor ({ scene, spawnPoint, asset }) {
-        super(scene, spawnPoint.x, spawnPoint.y, asset)
+    constructor (scene, spawnPoint) {
+        super(scene, spawnPoint.x, spawnPoint.y, 'character')
         this.spawnPoint = spawnPoint
         scene.add.existing(this)
         scene.physics.add.existing(this)
         this.setSize(Character.WIDTH, Character.HEIGHT)
         this.setMaxVelocity(Character.RUN_SPEED, Character.JUMP_SPEED)
+        this.setImmovable(true)
         // TODO: save/load
         this.info = {
             numberOfDeaths: 0
         }
 
         this.scene.anims.create({
-            key: STATE.STAND,
+            key: STATES.STAND,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 0, end: 3 }),
             frameRate: Character.DEFAULT_STAND_ANIMATION_FRAME_RATE,
             repeat: -1
         })
         this.scene.anims.create({
-            key: STATE.RUN_LEFT,
+            key: STATES.RUN_LEFT,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 8, end: 13 }),
             frameRate: 8,
             repeat: -1
         })
         this.scene.anims.create({
-            key: STATE.RUN_RIGHT,
+            key: STATES.RUN_RIGHT,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 8, end: 13 }),
             frameRate: 8,
             repeat: -1
         })
         this.scene.anims.create({
-            key: STATE.JUMP_UP,
+            key: STATES.JUMP_UP,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 16, end: 16 }),
             frameRate: 1,
             repeat: 1
         })
         this.scene.anims.create({
-            key: STATE.JUMP_TOP,
+            key: STATES.JUMP_TOP,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 17, end: 17 }),
             frameRate: 1,
             repeat: 1
         })
         this.scene.anims.create({
-            key: STATE.JUMP_DOWN,
+            key: STATES.JUMP_DOWN,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 18, end: 18 }),
             frameRate: 1,
             repeat: 1
         })
         this.scene.anims.create({
-            key: STATE.CROUCH,
+            key: STATES.CROUCH,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 4, end: 7 }),
             frameRate: 4,
             repeat: -1
         })
         this.scene.anims.create({
-            key: STATE.GRAB,
+            key: STATES.GRAB,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 29, end: 32 }),
             frameRate: 2,
             repeat: -1
         })
         this.scene.anims.create({
-            key: STATE.GLIDE,
+            key: STATES.GLIDE,
             frames: this.scene.anims.generateFrameNumbers('character', { start: 24, end: 28 }),
             frameRate: 3,
             repeat: -1
         })
 
-        this.machine = new StateMachine([
-            new State(
-                STATE.STAND,
-                [
-                    new StateTransition(this.isFailing, STATE.JUMP_DOWN),
-                    new StateTransition(this.isKeyDown, STATE.CROUCH),
-                    // TODO: remove repeated jumps
-                    new StateTransition(this.isKeyUp, STATE.JUMP_UP, this.onJump),
-                    new StateTransition([this.isKeyLeft, this.canMoveLeft], STATE.RUN_LEFT, this.onRunLeft),
-                    new StateTransition([this.isKeyRight, this.canMoveRight], STATE.RUN_RIGHT, this.onRunRight),
-                ],
-                void 0,
-                this.onLeaveStand,
-                true
-            ),
-            new State(
-                STATE.CROUCH,
-                [
-                    new StateTransition(this.isKeyDownUp, STATE.STAND, this.onStand),
-                ]
-            ),
-            new State(
-                STATE.JUMP_UP,
-                [
-                    new StateTransition(this.isOnTop, STATE.JUMP_TOP),
-                    new StateTransition(this.isCanGrab, STATE.GRAB, this.onGrub),
-                ],
-                this.ifInAir
-            ),
-            new State(
-                STATE.JUMP_TOP,
-                [
-                    new StateTransition(this.isFailing, STATE.JUMP_DOWN),
-                    new StateTransition(this.isCanGrab, STATE.GRAB, this.onGrub),
-                ],
-                this.ifInAir
-            ),
-            new State(
-                STATE.JUMP_DOWN,
-                [
-                    new StateTransition([this.isOnGround, this.isKeyLeft], STATE.RUN_LEFT, this.onRunLeft),
-                    new StateTransition([this.isOnGround, this.isKeyRight], STATE.RUN_RIGHT, this.onRunRight),
-                    new StateTransition(this.isOnGround, STATE.STAND, this.onStand),
-                    new StateTransition(this.isCanGrab, STATE.GRAB, this.onGrub),
-                ],
-                this.ifInAir
-            ),
-            new State(
-                STATE.RUN_LEFT,
-                [
-                    new StateTransition(this.isKeyUp, STATE.JUMP_UP, this.onJump),
-                    new StateTransition(this.isFailing, STATE.JUMP_DOWN),
-                    new StateTransition(this.isKeyDown, STATE.GLIDE, this.onGlide),
-                    new StateTransition(this.isKeyRight, STATE.RUN_RIGHT, this.onRunRight),
-                    new StateTransition(this.isKeyLeftUp, STATE.STAND, this.onStand),
-                    new StateTransition(this.isStop, STATE.STAND, this.onStand),
-                ],
-                this.ifRun
-            ),
-            new State(
-                STATE.RUN_RIGHT,
-                [
-                    new StateTransition(this.isKeyUp, STATE.JUMP_UP, this.onJump),
-                    new StateTransition(this.isFailing, STATE.JUMP_DOWN),
-                    new StateTransition(this.isKeyDown, STATE.GLIDE, this.onGlide),
-                    new StateTransition(this.isKeyLeft, STATE.RUN_LEFT, this.onRunLeft),
-                    new StateTransition(this.isKeyRightUp, STATE.STAND, this.onStand),
-                    new StateTransition(this.isStop, STATE.STAND, this.onStand),
-                ],
-                this.ifRun
-            ),
-            new State(
-                STATE.GLIDE,
-                [
-                    new StateTransition(this.isKeyUp, STATE.JUMP_UP, this.onJump),
-                    new StateTransition(this.isFailing, STATE.JUMP_DOWN),
-                    new StateTransition(this.isStop, STATE.STAND, this.onStand),
-                    // TODO: new StateTransition(???, STATE.CROUCH),
-                ],
-                this.ifGlide
-            ),
-            new State(
-                STATE.GRAB,
-                [
-                    new StateTransition(this.isKeyDown, STATE.JUMP_DOWN, this.onDrop),
-                ]
-            )
-        ], this.onChangeState)
+        this.machine = new StateMachine(stateMachineConfig(this), this.onChangeState)
 
         this.reset()
     }
 
     isStop = () => this.body.velocity.x === 0
     isOnGround = () => this.body.onFloor()
-    isKeyDown = () => this.scene.controls.isDown(BUTTONS.DOWN)
-    isKeyDownUp = () => this.scene.controls.isUp(BUTTONS.DOWN)
-    isKeyLeft = () => this.scene.controls.isDown(BUTTONS.LEFT)
-    isKeyLeftUp = () => this.scene.controls.isUp(BUTTONS.LEFT)
-    isKeyRight = () => this.scene.controls.isDown(BUTTONS.RIGHT)
-    isKeyRightUp = () => this.scene.controls.isUp(BUTTONS.RIGHT)
-    isKeyUp = () => this.scene.controls.isDown(BUTTONS.UP)
-    isKeyUpUp = () => this.scene.controls.isUp(BUTTONS.UP)
     isFailing = () => this.body.velocity.y > 0
     isOnTop = () => Math.abs(this.body.velocity.y) < Character.JUMP_SPEED / 3
     isCanJump = () => this.canJump
@@ -226,10 +122,10 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     canMoveRight = () => !this.body.blocked.right
 
     onStand = () => {
-        if (this.isKeyUpUp()) {
-            // TODO: other states
-            this.canJump = true
-        }
+        // if (this.isKeyUpUp()) {
+        //     // TODO: other states
+        //     this.canJump = true
+        // }
         this.standDuration = 0
         this.setAccelerationX(0)
         this.setVelocityX(0)
@@ -304,9 +200,9 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     }
 
     ifInAir = (delta) => {
-        if (this.isKeyLeft() && this.isMovingForward || this.isKeyRight() && !this.isMovingForward) {
-            this.slowDownByX(Character.AIR_DECELERATION, delta)
-        }
+        // if (this.isKeyLeft() && this.isMovingForward || this.isKeyRight() && !this.isMovingForward) {
+        //     this.slowDownByX(Character.AIR_DECELERATION, delta)
+        // }
     }
 
     onLeaveStand = () => {
@@ -315,9 +211,31 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
-    update (delta) {
-        if (!Phaser.Geom.Rectangle.Overlaps(this.scene.physics.world.bounds, this.getBounds()) || this.scene.controls.isDown(BUTTONS.RESET)) {
+    handleInput = (event) => {
+        if (event === BUTTONS_EVENTS.RESET.RELEASED) {
             return this.onDie()
+        }
+        this.machine.handleEvent(event)
+    }
+
+    update (delta) {
+        if (!Phaser.Geom.Rectangle.Overlaps(this.scene.physics.world.bounds, this.getBounds())/* || this.scene.controls.isDown(BUTTONS.RESET)*/) {
+            return this.onDie()
+        }
+        if (this.isStop()) {
+            this.machine.handleEvent(CHARACTER_EVENTS.STOP)
+        }
+        if (this.isFailing()) {
+            this.machine.handleEvent(CHARACTER_EVENTS.FAILING)
+        }
+        if (this.isOnTop()) {
+            this.machine.handleEvent(CHARACTER_EVENTS.STOP_ELEVATION)
+        }
+        if (this.isOnGround()) {
+            this.machine.handleEvent(CHARACTER_EVENTS.ON_GROUND)
+        }
+        if (this.isCanGrab()) {
+            this.machine.handleEvent(CHARACTER_EVENTS.CAN_GRUB)
         }
 
         this.machine.update(delta)

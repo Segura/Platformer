@@ -5,25 +5,49 @@ export class GamepadProvider {
         this.config = config
     }
 
-    getValue (button) {
+    handleInput = ({ keyCode, isDown }) => {
+        const event = this.config[keyCode]
+        this.scene.handleInput(isDown ? event.PRESSED : event.RELEASED)
+    }
+
+    subscribe = () => {
         const pad = this.scene.input.gamepad.getPad(0)
-        if (pad) {
-            const mappedButtons = Array.isArray(this.config[button]) ? this.config[button] : [this.config[button]]
-            return mappedButtons.some((mappedButton) => {
-                if (typeof mappedButton === 'function') {
-                    return mappedButton(pad)
-                }
-                return !!pad.buttons[mappedButton].value
-            })
+        if (!pad) {
+            return
         }
-        return false
+        Object.keys(this.config).forEach((button) => {
+            if (typeof button === 'function') {
+                // return mappedButton(pad)
+            } else {
+                const button = pad.getButtonValue(parseInt(button))
+                button.on('down', this.handleInput)
+                button.on('up', this.handleInput)
+            }
+            // const key = this.scene.input.keyboard.addKey(keyCode)
+            // key.on('down', this.handleInput)
+            // key.on('up', this.handleInput)
+        })
     }
 
-    isUp (button) {
-        return !this.getValue(button)
-    }
-
-    isDown (button) {
-        return this.getValue(button)
-    }
+    // getValue (button) {
+    //     const pad = this.scene.input.gamepad.getPad(0)
+    //     if (pad) {
+    //         const mappedButtons = Array.isArray(this.config[button]) ? this.config[button] : [this.config[button]]
+    //         return mappedButtons.some((mappedButton) => {
+    //             if (typeof mappedButton === 'function') {
+    //                 return mappedButton(pad)
+    //             }
+    //             return !!pad.buttons.js[mappedButton].value
+    //         })
+    //     }
+    //     return false
+    // }
+    //
+    // isUp (button) {
+    //     return !this.getValue(button)
+    // }
+    //
+    // isDown (button) {
+    //     return this.getValue(button)
+    // }
 }

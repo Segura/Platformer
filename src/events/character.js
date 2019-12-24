@@ -1,4 +1,9 @@
 export const CHARACTER_EVENTS = {
     DIE: 'DIE',
     IDLE: 'IDLE',
+    STOP: 'STOP',
+    ON_GROUND: 'ON_GROUND',
+    FAILING: 'FAILING',
+    STOP_ELEVATION: 'STOP_ELEVATION',
+    CAN_GRUB: 'CAN_GRUB',
 }

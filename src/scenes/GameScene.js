@@ -1,6 +1,8 @@
 import Phaser from 'phaser'
 import { Character } from '../character'
-import { BUTTONS, Controls } from '../control'
+import { Slime } from '../enemies'
+import { Controls } from '../control'
+import { BUTTONS_EVENTS } from '../events'
 import { AchievementsManager } from '../achievements'
 
 import { GENGameS3Controller } from './GENGameS3Controller'
@@ -11,21 +13,19 @@ export class GameScene extends Phaser.Scene {
 
     static CONFIG = {
         keyboard: {
-            [BUTTONS.LEFT]: Phaser.Input.Keyboard.KeyCodes.LEFT,
-            [BUTTONS.RIGHT]:  Phaser.Input.Keyboard.KeyCodes.RIGHT,
-            [BUTTONS.UP]:  Phaser.Input.Keyboard.KeyCodes.UP,
-            [BUTTONS.DOWN]:  Phaser.Input.Keyboard.KeyCodes.DOWN,
-            [BUTTONS.RESET]: Phaser.Input.Keyboard.KeyCodes.R
+            [Phaser.Input.Keyboard.KeyCodes.LEFT]: BUTTONS_EVENTS.LEFT,
+            [Phaser.Input.Keyboard.KeyCodes.RIGHT]: BUTTONS_EVENTS.RIGHT,
+            [Phaser.Input.Keyboard.KeyCodes.UP]: BUTTONS_EVENTS.UP,
+            [Phaser.Input.Keyboard.KeyCodes.DOWN]: BUTTONS_EVENTS.DOWN,
+            [Phaser.Input.Keyboard.KeyCodes.R]: BUTTONS_EVENTS.RESET,
         },
         gamepad: {
-            [BUTTONS.LEFT]: GENGameS3Controller.LEFT,
-            [BUTTONS.RIGHT]: GENGameS3Controller.RIGHT,
-            [BUTTONS.UP]: [
-                GENGameS3Controller.UP,
-                GENGameS3Controller.A
-            ],
-            [BUTTONS.DOWN]: GENGameS3Controller.DOWN,
-            [BUTTONS.RESET]: GENGameS3Controller.START
+            [GENGameS3Controller.LEFT]: BUTTONS_EVENTS.LEFT,
+            [GENGameS3Controller.RIGHT]: BUTTONS_EVENTS.RIGHT,
+            [GENGameS3Controller.UP]: BUTTONS_EVENTS.UP,
+            [GENGameS3Controller.A]: BUTTONS_EVENTS.UP,
+            [GENGameS3Controller.DOWN]: BUTTONS_EVENTS.DOWN,
+            [GENGameS3Controller.START]: BUTTONS_EVENTS.RESET
         }
     }
 
@@ -55,8 +55,7 @@ export class GameScene extends Phaser.Scene {
         this.platforms.setCollisionByProperty({ collided: true })
         this.bridges.setCollisionByProperty({ collided: true })
 
-        const playerTile = map.findByIndex(1, 0, false, 'player')
-        const spawnPoint = { x: playerTile.pixelX, y: playerTile.pixelY }
+        this.tileSize = map.tileWidth
 
         if (DEBUG) {
             const debugGraphics = this.add.graphics().setAlpha(0.75)
@@ -72,10 +71,17 @@ export class GameScene extends Phaser.Scene {
             })
         }
 
-        this.player = new Character({
-            scene: this,
-            spawnPoint,
-            asset: 'character'
+        const spawnPoint = map.findObject('objects', (object) => object.type === 'player')
+        this.player = new Character(this, spawnPoint)
+
+        this.enemies = []
+
+        map.filterObjects('objects', (object) => object.type === 'slime').forEach((spawnPoint) => {
+            const slime = new Slime(this, spawnPoint)
+            this.physics.add.collider(slime, this.platforms)
+            this.physics.add.collider(slime, this.bridges)
+            this.physics.add.collider(slime, this.player)
+            this.enemies.push(slime)
         })
 
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels - GameScene.DEFAULT_MAP_OFFSET)
@@ -98,8 +104,13 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    update(time, delta) {
+    handleInput = (event) => {
+        this.player.handleInput(event)
+    }
+
+    update (time, delta) {
         this.player.update(delta / 1000)
+        // this.enemies.forEach((enemy) => enemy.update(delta / 1000))
         if (DEBUG) {
             const pad = this.input.gamepad.gamepads[0]
             if (pad) {
