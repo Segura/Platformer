@@ -34,13 +34,14 @@ export class Character extends Phaser.Physics.Arcade.Sprite {
     static WIDTH = 20
     static HEIGHT = 30
 
-    constructor ({ scene, spawnPoint, asset }) {
-        super(scene, spawnPoint.x, spawnPoint.y, asset)
+    constructor (scene, spawnPoint) {
+        super(scene, spawnPoint.x, spawnPoint.y, 'character')
         this.spawnPoint = spawnPoint
         scene.add.existing(this)
         scene.physics.add.existing(this)
         this.setSize(Character.WIDTH, Character.HEIGHT)
         this.setMaxVelocity(Character.RUN_SPEED, Character.JUMP_SPEED)
+        this.setImmovable(true)
         // TODO: save/load
         this.info = {
             numberOfDeaths: 0

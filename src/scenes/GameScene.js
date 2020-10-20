@@ -52,40 +52,29 @@ export class GameScene extends Phaser.Scene {
         this.platforms = map.createStaticLayer('main', tileSet)
         this.bridges = map.createStaticLayer('bridges', tileSet)
         this.behind = map.createStaticLayer('behind', tileSet)
-        this.platforms.setCollisionByProperty({ collided: true })
-        this.bridges.setCollisionByProperty({ collided: true })
+        this.collisions = map.createStaticLayer('collisions', tileSet).setCollisionByProperty({ collided: true }).setVisible(false)
 
-        const playerTile = map.findByIndex(1, 0, false, 'player')
-        const spawnPoint = { x: playerTile.pixelX, y: playerTile.pixelY }
+        this.tileSize = map.tileWidth
 
         if (DEBUG) {
             const debugGraphics = this.add.graphics().setAlpha(0.75)
-            this.platforms.renderDebug(debugGraphics, {
-                tileColor: null,
-                collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255),
-                faceColor: new Phaser.Display.Color(40, 39, 37, 255)
-            })
-            this.bridges.renderDebug(debugGraphics, {
+            this.collisions.renderDebug(debugGraphics, {
                 tileColor: null,
                 collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255),
                 faceColor: new Phaser.Display.Color(40, 39, 37, 255)
             })
         }
 
-        this.player = new Character({
-            scene: this,
-            spawnPoint,
-            asset: 'character'
-        })
+        const spawnPoint = map.findObject('objects', (object) => object.type === 'player')
+        this.player = new Character(this, spawnPoint)
 
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels - GameScene.DEFAULT_MAP_OFFSET)
-        this.cameras.main.startFollow(this.player)
-        this.cameras.main.setLerp(0.3, 0.3)
-        this.cameras.main.setDeadzone(50, 50)
+            .startFollow(this.player)
+            .setLerp(0.3, 0.3)
+            .setDeadzone(50, 50)
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels, true, true, true, true)
-        this.physics.add.collider(this.player, this.platforms)
-        this.physics.add.collider(this.player, this.bridges)
+        this.physics.add.collider(this.player, this.collisions)
 
         this.achievementsManager = new AchievementsManager(this)
 

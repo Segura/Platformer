@@ -13,7 +13,6 @@
 1. Parallax background
 1. Spawn effect
 1. Landing effect
-1. "Stuck" bug
 1. Blocking move bug
 1. Level up and skills
 1. Enemies
@@ -21,3 +20,5 @@
 1. Cool main menu
 1. UI
 1. Saving
+1. Items and inventory
+1. Local multiplayer
