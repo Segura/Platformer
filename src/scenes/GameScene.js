@@ -47,14 +47,14 @@ export class GameScene extends Phaser.Scene {
         image.setScale(scale).setScrollFactor(0)
 
         const map = this.make.tilemap({key: 'map'})
+        this.tileSize = map.tileWidth
 
-        const tileSet = map.addTilesetImage('tileset', 'tiles')
+        const tileSet = map.addTilesetImage('tileset', 'tiles', this.tileSize, this.tileSize, 1, 2)
         this.platforms = map.createStaticLayer('main', tileSet)
         this.bridges = map.createStaticLayer('bridges', tileSet)
         this.behind = map.createStaticLayer('behind', tileSet)
-        this.collisions = map.createStaticLayer('collisions', tileSet).setCollisionByProperty({ collided: true }).setVisible(false)
 
-        this.tileSize = map.tileWidth
+        this.collisions = map.createStaticLayer('collisions', tileSet).setCollisionByProperty({ collided: true }).setVisible(false)
 
         if (DEBUG) {
             const debugGraphics = this.add.graphics().setAlpha(0.75)

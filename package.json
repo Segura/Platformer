@@ -22,11 +22,13 @@
     "eslint-plugin-promise": "^4.0.0",
     "eslint-plugin-standard": "^4.0.0",
     "expose-loader": "^0.7.3",
+    "tile-extruder": "^2.0.6",
     "webpack": "^4.44.2",
     "webpack-cli": "^3.3.12"
   },
   "scripts": {
-    "dev": "cross-env DEBUG=true webpack",
+    "extrude": "tile-extruder --tileWidth 16 --tileHeight 16 --input ./assets/images/tileset.png --output ./assets/images/tileset-extruded.png",
+    "dev": "npm run extrude && cross-env DEBUG=true webpack",
     "deploy": ""
   },
   "author": "",

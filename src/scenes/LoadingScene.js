@@ -15,7 +15,7 @@ export class LoadingScene extends Phaser.Scene {
 
         this.load.bitmapFont('textFont', './assets/fonts/ribeye-18.png', './assets/fonts/ribeye-18.xml')
         this.load.image('background', './assets/images/sky.png')
-        this.load.image('tiles', './assets/images/tileset.png')
+        this.load.image('tiles', './assets/images/tileset-extruded.png')
 
         this.load.image('dead', './assets/images/achievements/dead.png')
         this.load.image('idle', './assets/images/achievements/idle.png')
