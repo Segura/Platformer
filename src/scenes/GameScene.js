@@ -7,14 +7,12 @@ import { GENGameS3Controller } from './GENGameS3Controller'
 
 export class GameScene extends Phaser.Scene {
 
-    static DEFAULT_MAP_OFFSET = 450
-
     static CONFIG = {
         keyboard: {
             [BUTTONS.LEFT]: Phaser.Input.Keyboard.KeyCodes.LEFT,
-            [BUTTONS.RIGHT]:  Phaser.Input.Keyboard.KeyCodes.RIGHT,
-            [BUTTONS.UP]:  Phaser.Input.Keyboard.KeyCodes.UP,
-            [BUTTONS.DOWN]:  Phaser.Input.Keyboard.KeyCodes.DOWN,
+            [BUTTONS.RIGHT]: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+            [BUTTONS.UP]: Phaser.Input.Keyboard.KeyCodes.UP,
+            [BUTTONS.DOWN]: Phaser.Input.Keyboard.KeyCodes.DOWN,
             [BUTTONS.RESET]: Phaser.Input.Keyboard.KeyCodes.R
         },
         gamepad: {
@@ -29,25 +27,51 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    constructor() {
+    constructor () {
         super({ key: 'GameScene' })
     }
 
-    init() {}
+    init () {
+    }
 
-    preload() {}
+    preload () {
+    }
 
-    create() {
+    createTiledBackground (key, scrollFactor, positionFactor, scaleFactor) {
+        const textureHeight = this.cameras.main.height * scaleFactor
+        const scale = textureHeight / this.textures.get(key).getSourceImage().height
+        const yShift = textureHeight / 2 + this.cameras.main.height * positionFactor
+        return this.add.tileSprite(
+            0,
+            this.map.heightInPixels - yShift,
+            this.map.widthInPixels,
+            textureHeight,
+            key
+        )
+            .setTileScale(scale, scale)
+            .setScrollFactor(scrollFactor, 1)
+    }
+
+    createBackgroundGround (positionFactor, scaleFactor) {
+        const textureHeight = this.cameras.main.height * scaleFactor
+        let image = this.add.image(this.map.widthInPixels * positionFactor, this.map.heightInPixels - textureHeight / 2, 'background.ground')
+        const scale = textureHeight / this.textures.get('background.ground').getSourceImage().height
+        image.setScale(scale).setScrollFactor(0.5, 1)
+        return image
+    }
+
+    create () {
         this.controls = new Controls(this, GameScene.CONFIG)
 
-        let image = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'background')
-        let scaleX = this.cameras.main.width / image.width
-        let scaleY = this.cameras.main.height / image.height
-        let scale = Math.max(scaleX, scaleY)
-        image.setScale(scale).setScrollFactor(0)
-
-        const map = this.make.tilemap({key: 'map'})
+        const map = this.make.tilemap({ key: 'map' })
+        this.map = map
         this.tileSize = map.tileWidth
+
+        const backgroundSky = this.createTiledBackground('background.sky', 0.15, 0.2, 0.8)
+        const backgroundClouds = this.createTiledBackground('background.clouds', 0.2, 0.2, 0.4)
+        const backgroundSea = this.createTiledBackground('background.sea', 0.3, 0, 0.2)
+        const backgroundGround1 = this.createBackgroundGround(0.1, 0.25)
+        const backgroundGround2 = this.createBackgroundGround(0.6, 0.2)
 
         const tileSet = map.addTilesetImage('tileset', 'tiles', this.tileSize, this.tileSize, 1, 2)
         this.platforms = map.createStaticLayer('main', tileSet)
@@ -56,22 +80,15 @@ export class GameScene extends Phaser.Scene {
 
         this.collisions = map.createStaticLayer('collisions', tileSet).setCollisionByProperty({ collided: true }).setVisible(false)
 
-        if (DEBUG) {
-            const debugGraphics = this.add.graphics().setAlpha(0.75)
-            this.collisions.renderDebug(debugGraphics, {
-                tileColor: null,
-                collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255),
-                faceColor: new Phaser.Display.Color(40, 39, 37, 255)
-            })
-        }
-
         const spawnPoint = map.findObject('objects', (object) => object.type === 'player')
         this.player = new Character(this, spawnPoint)
 
-        this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels - GameScene.DEFAULT_MAP_OFFSET)
+        this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
             .startFollow(this.player)
             .setLerp(0.3, 0.3)
             .setDeadzone(50, 50)
+            .setRoundPixels(true)
+            .setBackgroundColor('A1F2EC')
 
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels, true, true, true, true)
         this.physics.add.collider(this.player, this.collisions)
@@ -83,11 +100,20 @@ export class GameScene extends Phaser.Scene {
         // this.add.tween(this.cameras.main.setRotation).to({x:2,y:2}, 500, Phaser.Easing.Elastic.Out, true, 100)
 
         if (DEBUG) {
-            this.debugText = this.add.text(this.cameras.main.worldView.x + 20, this.cameras.main.worldView.y + 20, '', {font: '12px', fill: '#000'}).setScrollFactor(0)
+            const debugGraphics = this.add.graphics().setAlpha(0.75)
+            this.collisions.renderDebug(debugGraphics, {
+                tileColor: null,
+                collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255),
+                faceColor: new Phaser.Display.Color(40, 39, 37, 255)
+            })
+            this.debugText = this.add.text(this.cameras.main.worldView.x + 20, this.cameras.main.worldView.y + 20, 'Some text', {
+                font: '12px',
+                fill: 'red'
+            }).setScrollFactor(0)
         }
     }
 
-    update(time, delta) {
+    update (time, delta) {
         this.player.update(delta / 1000)
         if (DEBUG) {
             const pad = this.input.gamepad.gamepads[0]

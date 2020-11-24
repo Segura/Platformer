@@ -10,10 +10,8 @@
 ## TODO
 
 1. After "end" level
-1. Parallax background
 1. Spawn effect
 1. Landing effect
-1. Blocking move bug
 1. Level up and skills
 1. Enemies
 1. Fight
